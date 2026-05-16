@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { useVault } from '@/context/VaultContext';
 import { Card } from '../ui';
-import { Key, Database, RefreshCw, Download, Save, Copy } from 'lucide-react';
+import { Key, Database, RefreshCw, Download, Save, Copy, Unplug } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export function SettingsTab() {
-  const { binId, setBinId, changePassword, forcePush, forcePull, exportData, syncStatus } = useVault();
+  const { binId, connectToBin, disconnectBin, changePassword, forcePush, forcePull, exportData, syncStatus } = useVault();
   
   const [newBinIdInput, setNewBinIdInput] = useState('');
   const [newPasswordInput, setNewPasswordInput] = useState('');
@@ -20,12 +20,16 @@ export function SettingsTab() {
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
-  const handleUpdateBin = (e: React.FormEvent) => {
+  const handleUpdateBin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newBinIdInput.trim()) {
-      setBinId(newBinIdInput.trim());
-      showStatus('success', 'Database Bin ID updated. Synchronizing...');
-      setNewBinIdInput('');
+      const result = await connectToBin(newBinIdInput.trim());
+      if (result.success) {
+        showStatus('success', 'Connected to vault successfully!');
+        setNewBinIdInput('');
+      } else {
+        showStatus('error', result.message || 'Failed to connect.');
+      }
     }
   };
 
@@ -83,9 +87,14 @@ export function SettingsTab() {
               <div className="flex-1 bg-black/20 border border-slate-800/50 rounded-lg py-2 px-3 text-sm text-slate-300 flex items-center justify-between" style={{ fontFamily: "'Courier New', monospace" }}>
                 <span>{binId || 'Not connected to cloud'}</span>
                 {binId && (
-                  <button onClick={() => copyToClipboard(binId)} className="text-slate-500 hover:text-blue-400 transition-colors">
-                    <Copy className="w-4 h-4" />
-                  </button>
+                  <div className="flex space-x-3">
+                    <button type="button" onClick={() => copyToClipboard(binId)} className="text-slate-500 hover:text-blue-400 transition-colors" title="Copy Bin ID">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={disconnectBin} className="text-slate-500 hover:text-red-400 transition-colors" title="Disconnect Cloud">
+                      <Unplug className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
