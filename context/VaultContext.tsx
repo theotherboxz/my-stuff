@@ -31,6 +31,7 @@ interface VaultContextType {
   updateEntry: (id: string, entry: Omit<PasswordEntry, 'id' | 'createdAt'>) => void;
   deleteEntry: (id: string) => void;
   syncStatus: SyncStatus;
+  syncMessage?: string;
   binId: string | null;
   connectToBin: (id: string) => Promise<{success: boolean, message?: string}>;
   disconnectBin: () => void;
@@ -52,6 +53,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [password, setPassword] = useState<string | null>(null);
   const [entries, setEntries] = useState<PasswordEntry[]>([]);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('Local Only');
+  const [syncMessage, setSyncMessage] = useState<string | undefined>(undefined);
   const [binId, setBinIdState] = useState<string | null>(null);
 
   useEffect(() => {
@@ -158,6 +160,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         return true;
       }
       setSyncStatus('Error');
+      setSyncMessage(e.message || "Failed to load from cloud");
       return false;
     }
   };
@@ -175,9 +178,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         setBinIdState(newBinId);
         localStorage.setItem(LOCAL_STORAGE_KEY_BIN, newBinId);
         setSyncStatus('Synced');
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to create bin:", e);
         setSyncStatus('Error');
+        setSyncMessage(e.message || "Failed to create bin");
       }
     } else {
       setSyncStatus('Syncing');
@@ -185,9 +189,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         const encryptedData = encryptData(data, pass);
         await updateBin(binId, encryptedData);
         setSyncStatus('Synced');
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to update bin:", e);
         setSyncStatus('Error');
+        setSyncMessage(e.message || "Failed to update bin");
       }
     }
   };
@@ -296,6 +301,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       updateEntry,
       deleteEntry,
       syncStatus,
+      syncMessage,
       binId,
       connectToBin,
       disconnectBin,
