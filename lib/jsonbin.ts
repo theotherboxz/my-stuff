@@ -8,7 +8,8 @@ export async function createBin(encryptedData: string): Promise<string> {
       'Content-Type': 'application/json',
       'X-Master-Key': JSONBIN_API_KEY,
       'X-Bin-Private': 'true',
-      'X-Bin-Name': 'VaultData'
+      'X-Bin-Name': 'VaultData',
+      'X-Bin-Versioning': 'false'
     },
     body: JSON.stringify({ vault: encryptedData })
   });
@@ -27,7 +28,8 @@ export async function updateBin(binId: string, encryptedData: string): Promise<v
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'X-Master-Key': JSONBIN_API_KEY
+      'X-Master-Key': JSONBIN_API_KEY,
+      'X-Bin-Versioning': 'false'
     },
     body: JSON.stringify({ vault: encryptedData })
   });
@@ -39,11 +41,12 @@ export async function updateBin(binId: string, encryptedData: string): Promise<v
 }
 
 export async function readBin(binId: string): Promise<string> {
-  const response = await fetch(`${JSONBIN_BASE_URL}/${binId}/latest`, {
+  const response = await fetch(`${JSONBIN_BASE_URL}/${binId}`, {
     method: 'GET',
     headers: {
       'X-Master-Key': JSONBIN_API_KEY
-    }
+    },
+    cache: 'no-store'
   });
 
   if (!response.ok) {
