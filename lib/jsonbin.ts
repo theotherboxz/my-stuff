@@ -1,4 +1,4 @@
-export const JSONBIN_API_KEY = "$2a$10$2q1u.CPU6pOArUxy5vaaP.N191sa.CU/OCjcKwnns3Ub9uYM048mq";
+export const JSONBIN_API_KEY = "$2a$10$nBns4APaMiUiS/2xPaj0R.mzhsUCZZJ2RV/bfZrfYSB5HddOV8iFa";
 export const JSONBIN_BASE_URL = "https://api.jsonbin.io/v3/b";
 
 export async function createBin(encryptedData: string): Promise<string> {
@@ -14,7 +14,8 @@ export async function createBin(encryptedData: string): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to create bin');
+    const errorText = await response.text();
+    throw new Error(`Failed to create bin: ${response.status} ${response.statusText} - ${errorText}`);
   }
 
   const data = await response.json();
@@ -32,7 +33,8 @@ export async function updateBin(binId: string, encryptedData: string): Promise<v
   });
 
   if (!response.ok) {
-    throw new Error('Failed to update bin');
+    const errorText = await response.text();
+    throw new Error(`Failed to update bin: ${response.status} ${response.statusText} - ${errorText}`);
   }
 }
 
@@ -45,7 +47,8 @@ export async function readBin(binId: string): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to read bin');
+    const errorText = await response.text();
+    throw new Error(`Failed to read bin: ${response.status} ${response.statusText} - ${errorText}`);
   }
 
   const data = await response.json();
