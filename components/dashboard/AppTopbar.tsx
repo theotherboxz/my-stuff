@@ -6,7 +6,7 @@ import { Shield, Cloud, CloudOff, AlertCircle, RefreshCw, LogOut } from 'lucide-
 import { motion } from 'motion/react';
 
 export function AppTopbar() {
-  const { syncStatus, logout } = useVault();
+  const { syncStatus, syncMessage, logout } = useVault();
 
   const getSyncIcon = () => {
     switch (syncStatus) {
@@ -38,7 +38,10 @@ export function AppTopbar() {
       </div>
 
       <div className="flex items-center space-x-6">
-        <div className="flex items-center bg-[#161B22] px-3 py-1.5 rounded-full border border-slate-700">
+        <div 
+          className="flex items-center bg-[#161B22] px-3 py-1.5 rounded-full border border-slate-700"
+          title={syncStatus === 'Error' ? syncMessage : undefined}
+        >
           {getSyncIcon()}
           <span className={`text-xs font-medium uppercase tracking-widest ml-2
             ${syncStatus === 'Synced' ? 'text-slate-400' : ''}
