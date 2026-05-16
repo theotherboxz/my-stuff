@@ -1,4 +1,4 @@
-export const JSONBIN_API_KEY = "2a10$2q1u.CPU6pOArUxy5vaaP.N191sa.CU/OCjcKwnns3Ub9uYM048mq";
+export const JSONBIN_API_KEY = "$2a$10$2q1u.CPU6pOArUxy5vaaP.N191sa.CU/OCjcKwnns3Ub9uYM048mq";
 export const JSONBIN_BASE_URL = "https://api.jsonbin.io/v3/b";
 
 export async function createBin(encryptedData: string): Promise<string> {
