@@ -32,7 +32,8 @@ interface VaultContextType {
   deleteEntry: (id: string) => void;
   syncStatus: SyncStatus;
   binId: string | null;
-  setBinId: (id: string) => void;
+  connectToBin: (id: string) => Promise<{success: boolean, message?: string}>;
+  disconnectBin: () => void;
   changePassword: (newPassword: string) => Promise<boolean>;
   forcePush: () => Promise<void>;
   forcePull: () => Promise<void>;
@@ -58,12 +59,34 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     if (savedBinId) setBinIdState(savedBinId);
   }, []);
 
-  const setBinId = (id: string) => {
-    setBinIdState(id);
-    localStorage.setItem(LOCAL_STORAGE_KEY_BIN, id);
-    if (password) {
-      loadData(id, password);
+  const connectToBin = async (newBinId: string): Promise<{success: boolean, message?: string}> => {
+    if (!password) return { success: false, message: 'Not logged in' };
+    setSyncStatus('Syncing');
+    try {
+      const encryptedData = await readBin(newBinId);
+      const data = decryptData(encryptedData, password);
+      if (data) {
+        setEntries(data.entries);
+        saveDataLocally(data, password);
+        setBinIdState(newBinId);
+        localStorage.setItem(LOCAL_STORAGE_KEY_BIN, newBinId);
+        setSyncStatus('Synced');
+        return { success: true };
+      } else {
+        setSyncStatus(binId ? 'Error' : 'Local Only');
+        return { success: false, message: "Decryption failed. Incorrect password." };
+      }
+    } catch (e: any) {
+      console.error("Failed to connect to bin:", e);
+      setSyncStatus(binId ? 'Error' : 'Local Only');
+      return { success: false, message: "Invalid Bin ID or network error." };
     }
+  };
+
+  const disconnectBin = () => {
+    setBinIdState(null);
+    localStorage.removeItem(LOCAL_STORAGE_KEY_BIN);
+    setSyncStatus('Local Only');
   };
 
   const encryptData = (data: VaultData, pass: string): string => {
@@ -117,13 +140,21 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       } else {
         throw new Error("Decryption failed. Incorrect password or corrupted data.");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to load from cloud:", e);
+      
+      let is404 = false;
+      if (e instanceof Error && e.message.includes('404')) {
+        is404 = true;
+        setBinIdState(null);
+        localStorage.removeItem(LOCAL_STORAGE_KEY_BIN);
+      }
+
       // Fallback
       const localData = loadDataLocally(currentPassword);
       if (localData) {
         setEntries(localData.entries);
-        setSyncStatus('Error');
+        setSyncStatus(is404 ? 'Local Only' : 'Error');
         return true;
       }
       setSyncStatus('Error');
@@ -168,7 +199,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     
     setPassword(pass);
     const success = await loadData(binId, pass);
-    if (!success && !binId) {
+    
+    const currentBinId = localStorage.getItem(LOCAL_STORAGE_KEY_BIN);
+    
+    if (!success && !currentBinId) {
        // First time login, create empty vault
        setEntries([]);
        setIsLoggedIn(true);
@@ -263,7 +297,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       deleteEntry,
       syncStatus,
       binId,
-      setBinId,
+      connectToBin,
+      disconnectBin,
       changePassword,
       forcePush,
       forcePull,
