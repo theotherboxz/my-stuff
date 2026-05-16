@@ -1,0 +1,8 @@
+{
+  "name": "Private Password Vault",
+  "description": "A secure password manager with AES-256 client-side encryption and JSONBin cloud synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
